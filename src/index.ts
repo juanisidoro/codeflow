@@ -332,6 +332,11 @@ Los flujos se guardan en la carpeta 'flows/' del proyecto.`,
           type: "string",
           description: "Contenido JSON del flujo (debe seguir CODEFLOW_SPEC_v2)",
         },
+        validate: {
+          type: "boolean",
+          description: "Si true, valida contra CODEFLOW_SPEC_v2 antes de guardar. Si falla, no guarda.",
+          default: false,
+        },
       },
       required: ["filename", "content"],
     },
@@ -710,7 +715,15 @@ async function handleToolCall(
         const analysisFile = file.replace(".cf", ".cf-analysis.json");
         const hasAnalysis = fs.existsSync(analysisFile);
 
-        let flowData: { name?: string; description?: string } = {};
+        let flowData: {
+          name?: string;
+          description?: string;
+          metadata?: {
+            version?: string;
+            updatedAt?: string;
+            changelog?: Array<{ date: string; changes: string }>;
+          };
+        } = {};
         try {
           const content = fs.readFileSync(file, "utf-8");
           flowData = JSON.parse(content);
@@ -718,10 +731,19 @@ async function handleToolCall(
           // Ignore parse errors
         }
 
+        // Get last changelog entry if exists
+        const changelog = flowData.metadata?.changelog;
+        const lastChange = changelog && changelog.length > 0
+          ? changelog[changelog.length - 1]
+          : null;
+
         return {
           filename,
           name: flowData.name || filename,
           description: flowData.description || "",
+          version: flowData.metadata?.version || null,
+          updatedAt: flowData.metadata?.updatedAt || null,
+          lastChange: lastChange ? `${lastChange.date}: ${lastChange.changes}` : null,
           hasAnalysis,
           path: getRelativePath(file),
         };
@@ -764,6 +786,7 @@ async function handleToolCall(
     case "save_flow": {
       let filename = args.filename as string;
       const content = args.content as string;
+      const shouldValidate = args.validate as boolean | undefined;
 
       // Ensure .cf extension
       if (!filename.endsWith(".cf")) {
@@ -776,6 +799,21 @@ async function handleToolCall(
         flowData = JSON.parse(content);
       } catch (e) {
         throw new Error(`Contenido JSON inválido: ${e}`);
+      }
+
+      // Validate against spec if requested
+      let validationResult: { valid: boolean; errors: ValidationError[] } | null = null;
+      if (shouldValidate) {
+        validationResult = validateFlow(flowData);
+        if (!validationResult.valid) {
+          return JSON.stringify({
+            success: false,
+            action: "validation_failed",
+            filename,
+            errors: validationResult.errors,
+            hint: "Corrige los errores antes de guardar o usa validate: false",
+          }, null, 2);
+        }
       }
 
       // Ensure flows directory exists
@@ -792,6 +830,7 @@ async function handleToolCall(
         action: isUpdate ? "updated" : "created",
         path: getRelativePath(flowPath),
         filename,
+        validated: shouldValidate === true,
       }, null, 2);
     }
 
@@ -1067,6 +1106,9 @@ async function handleToolCall(
         throw new Error(`Nodo '${nodeId}' no encontrado en ${filename}`);
       }
 
+      // Store before state for diff
+      const beforeNode = JSON.parse(JSON.stringify(flow.nodes[nodeIndex]));
+
       // Deep merge updates into existing node
       const existingNode = flow.nodes[nodeIndex];
       flow.nodes[nodeIndex] = deepMerge(
@@ -1077,13 +1119,28 @@ async function handleToolCall(
       // Preserve the ID (cannot be changed)
       flow.nodes[nodeIndex].id = nodeId;
 
+      const afterNode = flow.nodes[nodeIndex];
+      const afterNodeRecord = afterNode as unknown as Record<string, unknown>;
+
+      // Calculate what actually changed
+      const changedFields: string[] = [];
+      for (const key of Object.keys(updates)) {
+        if (JSON.stringify(beforeNode[key]) !== JSON.stringify(afterNodeRecord[key])) {
+          changedFields.push(key);
+        }
+      }
+
       writeFlow(filename, flow);
 
       return JSON.stringify({
         success: true,
         nodeId,
         updated: Object.keys(updates),
-        node: flow.nodes[nodeIndex],
+        changedFields,
+        diff: {
+          before: beforeNode,
+          after: afterNode,
+        },
       }, null, 2);
     }
 
@@ -1324,7 +1381,7 @@ async function handleToolCall(
 const server = new Server(
   {
     name: "codeflow-mcp",
-    version: "2.0.0",
+    version: "2.0.1",
   },
   {
     capabilities: {

@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2025-01-16
+
+### Enhanced
+
+- **`list_flows`**: Now includes `version`, `updatedAt`, and `lastChange` for each flow
+  - Allows seeing flow versions at a glance without reading full files
+- **`update_node`**: Now returns diff with `before`, `after`, and `changedFields`
+  - Better traceability of what exactly changed
+- **`save_flow`**: New optional `validate: true` parameter
+  - Validates against CODEFLOW_SPEC_v2 before saving
+  - Returns validation errors if invalid, preventing bad saves
+
+---
+
 ## [2.0.0] - 2025-01-16
 
 ### Added
