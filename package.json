@@ -1,0 +1,39 @@
+{
+  "name": "@codeflow/mcp",
+  "version": "1.0.0",
+  "description": "MCP Server for CodeFlow - Generate and manage code flow documentation with Claude Code",
+  "main": "dist/index.js",
+  "type": "module",
+  "bin": {
+    "codeflow-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "claude",
+    "codeflow",
+    "documentation",
+    "code-flow"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "dist",
+    "specs"
+  ]
+}
