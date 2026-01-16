@@ -32,6 +32,7 @@ Just configure Claude Code to use `npx` (see below).
 
 Create a `.mcp.json` file in your project root:
 
+**macOS / Linux:**
 ```json
 {
   "mcpServers": {
@@ -43,7 +44,50 @@ Create a `.mcp.json` file in your project root:
 }
 ```
 
+**Windows:**
+```json
+{
+  "mcpServers": {
+    "codeflow": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "codeflow-mcp"]
+    }
+  }
+}
+```
+
 This file can be committed to git - it works on any machine.
+
+### Monorepo / Custom flows directory
+
+If your flows are in a different location (e.g., monorepo with multiple projects), use the `CODEFLOW_FLOWS_DIR` environment variable:
+
+```json
+{
+  "mcpServers": {
+    "codeflow": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "codeflow-mcp"],
+      "env": {
+        "CODEFLOW_FLOWS_DIR": "backend/FCC/products"
+      }
+    }
+  }
+}
+```
+
+Example monorepo structure:
+```
+my-monorepo/
+├── frontend/
+├── backend/
+│   └── FCC/
+│       └── products/        ← Your flows here
+│           ├── auth.cf
+│           └── orders.cf
+├── shared/
+└── .mcp.json                ← Config points to backend/FCC/products
+```
 
 ### Global configuration
 
