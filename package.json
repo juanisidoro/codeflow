@@ -1,5 +1,5 @@
 {
-  "name": "@codeflow/mcp",
+  "name": "codeflow-mcp",
   "version": "1.0.0",
   "description": "MCP Server for CodeFlow - Generate and manage code flow documentation with Claude Code",
   "main": "dist/index.js",
@@ -20,8 +20,12 @@
     "documentation",
     "code-flow"
   ],
-  "author": "",
+  "author": "juanisidoro",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/juanisidoro/codeflow.git"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0"
   },
