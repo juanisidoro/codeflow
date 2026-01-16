@@ -14,8 +14,8 @@ MCP (Model Context Protocol) server for managing code flow documentation with Cl
 
 ```bash
 # Clone or download
-git clone https://github.com/your-username/codeflow-mcp.git
-cd codeflow-mcp
+git clone https://github.com/juanisidoro/codeflow.git
+cd codeflow
 
 # Install dependencies
 npm install
@@ -33,7 +33,7 @@ Add to your Claude Code settings (`~/.claude/settings.json` or project `.claude/
   "mcpServers": {
     "codeflow": {
       "command": "node",
-      "args": ["/path/to/codeflow-mcp/dist/index.js"],
+      "args": ["/path/to/codeflow/dist/index.js"],
       "env": {
         "CODEFLOW_PROJECT_PATH": "/path/to/your/project",
         "CODEFLOW_FLOWS_DIR": "flows"
